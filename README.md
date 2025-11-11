@@ -167,8 +167,8 @@ zkp-lab-cpqd/
 ├── 📁 circuits/                    # Circuitos ZKP em múltiplas linguagens
 │   ├── noir/                       # Implementações em Noir
 │   │   ├── age-verification/       # Prova de idade
-│   │   ├── merkle-tree/            # Árvores de Merkle
-│   │   └── range-proof/            # Provas de intervalo
+│   │   ├── vote-system/            # Sistema de votação
+│   │   └── interval-prove          # Provas de intervalo
 │   ├── circom/                     # Implementações em Circom
 │   │   ├── voting/                 # Sistemas de votação
 │   │   └── credentials/            # Credenciais verificáveis
