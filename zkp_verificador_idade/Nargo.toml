@@ -1,0 +1,6 @@
+[package]
+name = "zkp_verificador_idade"
+type = "bin"
+authors = ["Luiz Fernando Pereira"]
+
+[dependencies]
