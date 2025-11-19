@@ -166,7 +166,7 @@ zkp-lab-cpqd/
 │
 ├── 📁 circuits/                    # Circuitos ZKP em múltiplas linguagens
 │   ├── noir/                       # Implementações em Noir
-│   │   ├── age-verification/       # Prova de idade
+│   │   ├── zkp_verificaodr_idade/  # Prova de idade
 │   │   ├── vote-system/            # Sistema de votação
 │   │   └── interval-prove          # Provas de intervalo
 │   ├── circom/                     # Implementações em Circom
@@ -306,19 +306,24 @@ Se todos os testes passarem, você está pronto! ✅
 
 Prove que você tem 18+ anos sem revelar sua idade exata.
 
-**Circuito (`circuits/noir/age-verification/src/main.nr`):**
+**Circuito (`circuits/noir/zkp_verificador_idade/src/main.nr`):**
 ```rust
-fn main(idade: u8) {
-    assert(idade >= 18);
+pub fn main(idade: Field, idade_min: pub Field) {
+    
+    // Cast nos Fields para u8 antes de comparar
+    assert(idade as u8 >= idade_min as u8, "idade deve ser maior do que 18 anos");
 }
+
 ```
 
 **Executar:**
 ```bash
-cd circuits/noir/age-verification
+cd circuits/noir/zkp_verificaodr_idade
+nargo check
 nargo compile
-nargo prove
-nargo verify
+nargo execute
+nargo test
+nargo test --show-output
 ```
 
 **[📖 Ver tutorial completo →](examples/02-age-verification/)**
