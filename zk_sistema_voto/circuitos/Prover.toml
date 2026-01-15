@@ -1,0 +1,10 @@
+cpf = ""
+is_left = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+merkle_proof = ""
+merkle_root = ""
+nullifier = ""
+segredo = ""
+sessao = ""
+titulo = ""
+voto = ""
+voto_compromisso = ""
