@@ -22,6 +22,19 @@ contract Sistema_Votacao{
     /// Verifier contrato (deve ser deployado e configurado com o verifier gerado pelo sistema de prova backend escolhido)
     IVerifier public verifier;
 
+    // Estrutura para armezenar os canditatos
+    struct Candidato {
+        uint256 id;
+        string nome;
+        uint256 totalVotos;
+        bool ativo;
+    }
+    // sessao => (idCandidato => Candidato)
+    mapping(uint256 => mapping(uint256 => Candidato)) public candidatosPorSessao;
+
+    // sessao => vetor de ids para listar os candidatos no frontend
+    mapping(uint256 => uint256[]) public listaIdsCandidatos;    
+
     /// Marca anuladores(nullifiers) ja usados: nullifier => usado (impede voto duplo)
     mapping(uint256 => bool) public usedNullifier;
 
@@ -33,8 +46,8 @@ contract Sistema_Votacao{
 
     /// Emitido quando o voto e aceito com sucesso
     /// nao incluir msg.sender para preservar o anonimato
-    event VoteSubmitted(bytes32 indexed votoCommit, uint256 indexed sessao, uint256 timestamp);
-
+    event VoteSubmitted (uint256 indexed candidatoId, uint256 indexed sessao, uint256 timestamp);
+    event CandidatoAdicionado(uint256 indexed sessao, uint256 indexed id, string nome);
     /// Emitido quando uma raiz merkle para uma sessao e definida/atualizada
     event MerkleRootSet (uint256 indexed sessao, bytes32 merkleRoot);
 
@@ -54,6 +67,29 @@ contract Sistema_Votacao{
             verifier = IVerifier(_verifier);
         }
     }
+    /**
+     * @notice Adiciona um candidato a uma sessao especifica
+     */
+    function adicionarCandidato(uint256 sessao, uint256 id, string memory nome) external onlyOwnner {
+        require(!candidatosPorSessao[sessao][id].ativo, "Candidato ja existe nesta sessao");
+
+        candidatosPorSessao[sessao][id] = Candidato(id, nome, 0, true);
+        listaIdsCandidatos[sessao].push(id);
+
+        emit CandidatoAdicionado(sessao, id, nome);
+    }
+    /**
+     * @notice Retorna a lista de candidatos de uma sessão (para o Frontend carregar)
+     */
+    function listarCandidatos(uint256 sessao) external view returns (Candidato[] memory){
+        uint256[] memory ids = listaIdsCandidatos[sessao];
+        Candidato[] memory lista = new Candidato[](ids.length);
+
+        for(uint i = 0; i < ids.length; i++){
+            lista[i] = candidatosPorSessao[sessao][ids[i]];
+        }
+        return lista;
+    }
 
     /// @notice Define ou atualiza o endereco do contrato do verificador
     function setVerifier(address _verifier) external onlyOwnner {
@@ -66,7 +102,7 @@ contract Sistema_Votacao{
     function setMerkleRoot(uint256 sessao, bytes32 root) external onlyOwnner {
         merkleRootPorSessao[sessao] = root;
         emit MerkleRootSet(sessao, root);
-    }
+    }  
 
     /// @notice Define se um anulador ja foi utilizado
     function isNullifierUsed(uint256 nullifier) external view returns (bool){
@@ -79,10 +115,10 @@ contract Sistema_Votacao{
      * @param proof Prova gerada pelo backend barretenberg
      * @param merkleRoot Raiz da arvore de eleitores
      * @param nullifier Identificador unico do voto (evita gasto duplo)
-     * @param votoCommit Hash do voto + segredo
+     * @param votoCommit Hash do voto + segredo, se o votoCommit for o ID do candidato ele ser usado para incrementar o contador
      * @param sessao ID da eleicao/sessao
      */
-    function submitVote(bytes calldata proof, bytes32 merkleRoot, uint256 nullifier, bytes32 votoCommit, uint256 sessao) external {
+    function submitVote(bytes calldata proof, bytes32 merkleRoot, uint256 nullifier,bytes32 candidatoId, bytes32 votoCommit, uint256 sessao) external {
         // Verificacao basica
         require(address(verifier) != address(0), "Verificador nao definido.");
 
@@ -98,28 +134,34 @@ contract Sistema_Votacao{
         //** *OBS IMPORTANTE: A ordem dos sinais publico deve ser identica a ordem de no Noir (main.nr) */
         // Cria matriz de sinais publicos para enviar ao verificador
         // A ordem deve corresponder as saidas publicas do circuito
+
         // Converte bytes32 em uint256 para os sinais publicos do verificador
         bytes32[] memory publicSignals = new bytes32[](4);
 
         publicSignals[0] = merkleRoot;
         publicSignals[1] = bytes32(nullifier);
-        publicSignals[2] = votoCommit;
-        publicSignals[3] = bytes32(sessao);
+        publicSignals[2] = candidatoId;
+        publicSignals[3] = votoCommit;
+        publicSignals[4] = bytes32(sessao);
         
         // Chamada ao verificador ZKP
         bool ok = verifier.verify(proof, publicSignals);
         require(ok, "Prova ZKP invalida.");
 
+        // Atualizacao da contabilidade
+        uint256 candidatoIdUint = uint256(votoCommit); // Supondo que o votoCommit seja o ID do candidato (ajuste conforme a logica do seu sistema de votos)
+        require(candidatosPorSessao[sessao][candidatoIdUint].ativo, "Candidato inexistente.");
+
         // Efeito: registra o uso para evitar voto duplo
         usedNullifier[nullifier] = true;
 
-        // Marca o nullifier como usado
-        usedNullifier[nullifier] = true;
+        candidatosPorSessao[sessao][candidatoIdUint].totalVotos++;
 
         // Armeza o votoCommit para a sessao permitir a contagem posterior
         votoPorSessao[sessao].push(votoCommit);
 
-        emit VoteSubmitted(votoCommit, sessao, block.timestamp);
+        // Emite evento de voto submetido (sem dados que possam comprometer o anonimato)
+        emit VoteSubmitted(candidatoIdUint, sessao, block.timestamp);
     
     }
     function getVotosSessao(uint256 sessao) external view returns (bytes32[] memory){
