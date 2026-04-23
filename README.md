@@ -512,8 +512,8 @@ Agradecemos a todos que contribuíram para este projeto
 **CPQD - Centro de Pesquisa e Desenvolvimento em Telecomunicações**  
 *Residência Tecnológica em Criptografia Aplicada e Blockchain*
 
-**Coordenação**: Braga
-**Supervisão Técnica**: Mateus
+**Coordenação**: Alexandra Braga Mello
+**Supervisão Técnica**: Antonio Mateus de Sousa
 
 ---
 
