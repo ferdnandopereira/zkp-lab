@@ -1,0 +1,20 @@
+{
+  "name": "anonymous-credential",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "main.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "bench:run": "node main.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.38.0",
+    "circom_tester": "^0.0.24",
+    "circomlib": "^2.0.5",
+    "eslint": "^9.38.0"
+  }
+}
