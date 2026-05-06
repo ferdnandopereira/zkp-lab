@@ -1,6 +1,6 @@
 pragma circom 2.2.2;
 
-include "hash-functions/poseidon.circom";
+include "hash_functions/poseidon.circom";
 
 template Commit() {
     signal input secret;

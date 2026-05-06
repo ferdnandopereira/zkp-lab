@@ -1,6 +1,6 @@
-import { runExperiment } from './benchmarking/runner/runExperiment.js';
-import { tree } from './benchmarking/experiments/tree.js';
-import { linear } from './benchmarking/experiments/linear.js';
+import { runExperiment } from './bench/runner/run-experiment.js';
+import { tree } from './bench/experiments/tree.js';
+import { linear } from './bench/experiments/linear.js';
 
 async function main() {
     await runExperiment(tree);
